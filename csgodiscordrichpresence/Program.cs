@@ -10,6 +10,7 @@ namespace csgodiscordrichpresence
     {
         static void Main(string[] args)
         {
+            Presence.Start();
         }
     }
 }
