@@ -1,5 +1,6 @@
 ﻿using CSGSI;
 using DiscordRPC;
+using DiscordRPC.Exceptions;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -67,21 +68,36 @@ namespace csgodiscordrichpresence
         //checks processes for csgo
         public static bool GetCsgo()
         {
-            Process[] csgo = Process.GetProcessesByName("csgo");
-            if (csgo.Length >= 0)
+            try
             {
-                string csgodir = csgo[0].MainModule.FileName; //csgo file path
-                csgodir = csgodir.Remove(csgodir.Length - 8, 8); //trim csgo.exe
-                csgodir += @"csgo\cfg\gamestate_integration_discord.cfg"; //make dir to the config location
-                if (!File.Exists(csgodir))
+                Process[] csgo = Process.GetProcessesByName("csgo");
+                if (csgo.Length > 0)
                 {
-                    CreateCFG(csgodir);
+                    string csgodir = csgo[0].MainModule.FileName; //csgo file path
+                    csgodir = csgodir.Replace("csgo.exe", ""); //trim csgo.exe
+                    csgodir += @"csgo\cfg\gamestate_integration_discord.cfg"; //make dir to the config location
+                    if (!File.Exists(csgodir))
+                    {
+                        CreateCFG(csgodir);
+                    }
+                    return true;
                 }
-                return true;
-            }
-            else
+                else
+                {
+                    return false;
+                }
+            } catch (Exception ex)
             {
-                return false;
+                if (ex is IndexOutOfRangeException)
+                {
+                    Console.WriteLine("Something went wrong please try again with CSGO open");
+                    return false;
+                }
+                else
+                {
+                    Console.WriteLine("Something went wrong, :( exception : " + ex);
+                    return false;
+                }
             }
         }
 
@@ -106,44 +122,63 @@ namespace csgodiscordrichpresence
         //event when gamestatelistener has a new event
         static void OnNewGameState(GameState gs)
         {
-            if (gsl.CurrentGameState.Map.Name == "" && gsl.CurrentGameState.Player.MatchStats.Kills == -1)
+            try
             {
-                client.SetPresence(new RichPresence()
-                {
-                    Details = "In Main Menu",
-                    State = "Main Menu",
-                    Assets = new Assets()
-                    {
-                        LargeImageKey = "mainmenu",
-                        LargeImageText = "Main Menu"
-                    },
-                    Timestamps = new Timestamps(gameOpened),
-                });
-            }
-            else
-            {
-                if (gsl.CurrentGameState.Provider.SteamID == gsl.CurrentGameState.Player.SteamID)
+                if (gsl.CurrentGameState.Map.Name == "" && gsl.CurrentGameState.Player.MatchStats.Kills == -1)
                 {
                     client.SetPresence(new RichPresence()
                     {
-                        Details = gsl.CurrentGameState.Player.MatchStats.Kills + "-" + gsl.CurrentGameState.Player.MatchStats.Assists + "-" + gsl.CurrentGameState.Player.MatchStats.Deaths
-                        + " " + gsl.CurrentGameState.Player.Weapons.ActiveWeapon.Name,
-
-                        State = "CT : " + gsl.CurrentGameState.Map.TeamCT.Score + " T : " + gsl.CurrentGameState.Map.TeamT.Score + " " + gsl.CurrentGameState.Map.Phase,
+                        Details = "In Main Menu",
+                        State = "Main Menu",
                         Assets = new Assets()
                         {
-                            LargeImageKey = gsl.CurrentGameState.Map.Name,
-                            LargeImageText = gsl.CurrentGameState.Map.Name + " - " + gsl.CurrentGameState.Map.Mode.ToString(),
-                            SmallImageKey = "team" + gsl.CurrentGameState.Player.Team.ToString().ToLower(),
-                            SmallImageText = "Team " + gsl.CurrentGameState.Player.Team.ToString() + " - " + gsl.CurrentGameState.Player.State.Health + " Health",
+                            LargeImageKey = "mainmenu",
+                            LargeImageText = "Main Menu"
                         },
                         Timestamps = new Timestamps(gameOpened),
                     });
+                    client.Invoke();
                 }
-                client.Invoke();
+                else
+                {
+                    if (gsl.CurrentGameState.Provider.SteamID == gsl.CurrentGameState.Player.SteamID)
+                    {
+                        string currentWeapon = gsl.CurrentGameState.Player.Weapons.ActiveWeapon.Name.Replace("weapon_", "");
+                        currentWeapon = currentWeapon.Contains("knife_") ? currentWeapon.Replace("knife_", "") : currentWeapon;
+                        string playerState = gsl.CurrentGameState.Player.State.Flashed > 0 ? "Flashed" : gsl.CurrentGameState.Player.State.Smoked > 0 ? "In Smoke" :
+                            gsl.CurrentGameState.Player.State.Burning > 0 ? "In a Fire" : ""; 
+                        string stateText = gsl.CurrentGameState.Map.Phase.ToString() != "Live" ? gsl.CurrentGameState.Map.Phase.ToString() : playerState;
+
+                        client.SetPresence(new RichPresence()
+                        {
+                            Details = gsl.CurrentGameState.Player.MatchStats.Kills + "-" + gsl.CurrentGameState.Player.MatchStats.Assists + "-" + gsl.CurrentGameState.Player.MatchStats.Deaths
+                            + " " + currentWeapon,
+
+                            State = "CT : " + gsl.CurrentGameState.Map.TeamCT.Score + " T : " + gsl.CurrentGameState.Map.TeamT.Score + " " + stateText,
+                            Assets = new Assets()
+                            {
+                                LargeImageKey = gsl.CurrentGameState.Map.Name,
+                                LargeImageText = gsl.CurrentGameState.Map.Name + " - " + gsl.CurrentGameState.Map.Mode.ToString(),
+                                SmallImageKey = "team" + gsl.CurrentGameState.Player.Team.ToString().ToLower(),
+                                SmallImageText = "Team " + gsl.CurrentGameState.Player.Team.ToString() + " - " + gsl.CurrentGameState.Player.State.Health + " Health",
+                            },
+                            Timestamps = new Timestamps(gameOpened),
+                        });
+                    }
+                    client.Invoke();
+                }
+            } catch (Exception ex)
+            {
+                if(ex is StringOutOfRangeException)
+                {
+                    Console.WriteLine("Map name too long to load into discord! :(");
+                }
+                else
+                {
+                    Console.WriteLine(ex);
+                }
             }
         }
-
         void Initialize()
         {
             //client containg all the relevant artwork etc for the rich presence.
