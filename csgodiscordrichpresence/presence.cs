@@ -147,7 +147,7 @@ namespace csgodiscordrichpresence
                         
                         string[] weaponProp = selectedWeapon.Split('_');
 
-                        string currentWeapon = weaponProp.Length == 0 ? "Unknown Weapon" : String.Join(" ", weaponProp, 1, weaponProp.Length - 1);
+                        string currentWeapon = weaponProp.Length == 0 ? "Unknown Weapon" : String.Join(" ", weaponProp, weaponProp.Length == 1 ? 0 : 1, weaponProp.Length == 1 ? 1 : weaponProp.Length - 1);
 		
                         string playerState = gsl.CurrentGameState.Player.State.Flashed > 0 ? "Flashed" : gsl.CurrentGameState.Player.State.Smoked > 0 ? "In Smoke" :
                             gsl.CurrentGameState.Player.State.Burning > 0 ? "In a Fire" : ""; 
