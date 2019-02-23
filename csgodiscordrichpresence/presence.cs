@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Timers;
+using System.Globalization;
 using System.Linq;
 
 namespace csgodiscordrichpresence
@@ -195,7 +196,8 @@ namespace csgodiscordrichpresence
             {
                 for (int i = 1; i < weaponProp.Length; i++)
                 {
-                    weaponProp[i] = weaponProp[i].First().ToString().ToUpper() + weaponProp[i].Substring(1);
+                    TextInfo ti = new CultureInfo("en-US").TextInfo;
+                    weaponProp[i] = ti.ToTitleCase(weaponProp[i]);
                 }
                 currentWeapon = String.Join(" ", weaponProp, 1, weaponProp.Length - 1);
             }
