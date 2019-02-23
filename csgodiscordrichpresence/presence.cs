@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Timers;
+using System.Linq;
 
 namespace csgodiscordrichpresence
 {
@@ -142,13 +143,9 @@ namespace csgodiscordrichpresence
                 else
                 {
                     if (gsl.CurrentGameState.Provider.SteamID == gsl.CurrentGameState.Player.SteamID)
-                    {
-                        string selectedWeapon = gsl.CurrentGameState.Player.Weapons.ActiveWeapon.Name;
-                        
-                        string[] weaponProp = selectedWeapon.Split('_');
+                    { 
+			string currentWeapon = GetWeapon();
 
-                        string currentWeapon = weaponProp.Length == 0 ? "Unknown Weapon" : String.Join(" ", weaponProp, weaponProp.Length == 1 ? 0 : 1, weaponProp.Length == 1 ? 1 : weaponProp.Length - 1);
-		
                         string playerState = gsl.CurrentGameState.Player.State.Flashed > 0 ? "Flashed" : gsl.CurrentGameState.Player.State.Smoked > 0 ? "In Smoke" :
                             gsl.CurrentGameState.Player.State.Burning > 0 ? "In a Fire" : ""; 
                         string stateText = gsl.CurrentGameState.Map.Phase.ToString() != "Live" ? gsl.CurrentGameState.Map.Phase.ToString() : playerState;
@@ -183,6 +180,26 @@ namespace csgodiscordrichpresence
                 }
             }
         }
+	    
+        private static string GetWeapon()
+        {
+            string selectedWeapon = gsl.CurrentGameState.Player.Weapons.ActiveWeapon.Name;
+            string[] weaponProp = selectedWeapon.Split('_');
+
+            string currentWeapon = "Unknown Weapon";
+
+            if (weaponProp.Length != 0)
+            {
+                for (int i = 1; i < weaponProp.Length; i++)
+                {
+                    weaponProp[i] = weaponProp[i].First().ToString().ToUpper() + weaponProp[i].Substring(1);
+                }
+                currentWeapon = String.Join(" ", weaponProp, 1, weaponProp.Length - 1);
+            }
+
+            return currentWeapon;
+        }
+	    
         void Initialize()
         {
             //client containg all the relevant artwork etc for the rich presence.
