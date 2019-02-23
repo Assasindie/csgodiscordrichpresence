@@ -144,10 +144,13 @@ namespace csgodiscordrichpresence
                 {
                     if (gsl.CurrentGameState.Provider.SteamID == gsl.CurrentGameState.Player.SteamID)
                     { 
-			string currentWeapon = GetWeapon();
 
-                        string playerState = gsl.CurrentGameState.Player.State.Flashed > 0 ? "Flashed" : gsl.CurrentGameState.Player.State.Smoked > 0 ? "In Smoke" :
+		            	string currentWeapon = GetWeapon();
+
+                        string playerState = gsl.CurrentGameState.Player.State.Flashed > 0 ? GetStatePercentage(gsl.CurrentGameState.Player.State.Flashed) + "% Flashed" : 
+                            gsl.CurrentGameState.Player.State.Smoked > 0 ? GetStatePercentage(gsl.CurrentGameState.Player.State.Smoked) + "% In Smoke" :
                             gsl.CurrentGameState.Player.State.Burning > 0 ? "In a Fire" : ""; 
+
                         string stateText = gsl.CurrentGameState.Map.Phase.ToString() != "Live" ? gsl.CurrentGameState.Map.Phase.ToString() : playerState;
 
                         client.SetPresence(new RichPresence()
@@ -200,6 +203,12 @@ namespace csgodiscordrichpresence
             return currentWeapon;
         }
 	    
+        private static string GetStatePercentage(int value)
+        {
+            string percent = ((value / 255.00) * 100).ToString("0");
+            return percent;
+        }
+
         void Initialize()
         {
             //client containg all the relevant artwork etc for the rich presence.
