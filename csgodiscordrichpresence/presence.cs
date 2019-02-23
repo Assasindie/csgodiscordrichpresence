@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Timers;
+using System.Linq;
 
 namespace csgodiscordrichpresence
 {
@@ -143,7 +144,7 @@ namespace csgodiscordrichpresence
                 {
                     if (gsl.CurrentGameState.Provider.SteamID == gsl.CurrentGameState.Player.SteamID)
                     { 
-			string currentWeapon = getWeapon();
+			string currentWeapon = GetWeapon();
 
                         string playerState = gsl.CurrentGameState.Player.State.Flashed > 0 ? "Flashed" : gsl.CurrentGameState.Player.State.Smoked > 0 ? "In Smoke" :
                             gsl.CurrentGameState.Player.State.Burning > 0 ? "In a Fire" : ""; 
@@ -180,31 +181,24 @@ namespace csgodiscordrichpresence
             }
         }
 	    
-	private static string getWeapon()
-	{
-		string selectedWeapon = gsl.CurrentGameState.Player.Weapons.ActiveWeapon.Name;
+        private static string GetWeapon()
+        {
+            string selectedWeapon = gsl.CurrentGameState.Player.Weapons.ActiveWeapon.Name;
+            string[] weaponProp = selectedWeapon.Split('_');
 
-		string[] weaponProp = selectedWeapon.Split('_');
+            string currentWeapon = "Unknown Weapon";
 
-		string currentWeapon = "Unknown Weapon";
+            if (weaponProp.Length != 0)
+            {
+                for (int i = 1; i < weaponProp.Length; i++)
+                {
+                    weaponProp[i] = weaponProp[i].First().ToString().ToUpper() + weaponProp[i].Substring(1);
+                }
+                currentWeapon = String.Join(" ", weaponProp, 1, weaponProp.Length - 1);
+            }
 
-		if (weaponProp.Length != 0)
-		{
-			for (int i = 1; i < weaponProp.Length; i++)
-			{
-				if (weaponProp[i].Length == 1)
-				{
-					weaponProp[i] = weaponProp[i].ToUpper();
-				} else
-				{
-					weaponProp[i] = weaponProp[i].Remove(1).ToUpper() + weaponProp[i].Substring(1);
-				}
-			}
-			currentWeapon = String.Join(" ", weaponProp, 1, weaponProp.Length - 1);
-		}
-		
-		return currentWeapon;
-	}
+            return currentWeapon;
+        }
 	    
         void Initialize()
         {
