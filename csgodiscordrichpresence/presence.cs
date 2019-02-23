@@ -200,6 +200,11 @@ namespace csgodiscordrichpresence
                 currentWeapon = String.Join(" ", weaponProp, 1, weaponProp.Length - 1);
             }
 
+            if (currentWeapon.Contains("Knife"))
+            {
+                currentWeapon = currentWeapon.Replace("Knife", "");
+            }
+
             return currentWeapon;
         }
 	    
